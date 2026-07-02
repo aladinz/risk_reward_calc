@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risk Reward Calculator</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-2: 0.5rem;
+      --space-3: 0.75rem;
+      --space-4: 1rem;
+      --space-5: 1.25rem;
+      --space-6: 1.5rem;
+      --space-8: 2rem;
+      --space-10: 2.5rem;
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --color-bg: #f7f6f2;
+      --color-surface: #f9f8f5;
+      --color-surface-2: #fbfbf9;
+      --color-border: #d4d1ca;
+      --color-divider: #dcd9d5;
+      --color-text: #28251d;
+      --color-text-muted: #7a7974;
+      --color-text-inverse: #f9f8f4;
+      --color-primary: #01696f;
+      --color-primary-hover: #0c4e54;
+      --color-success: #437a22;
+      --color-warning: #964219;
+      --color-error: #a12c7b;
+      --shadow-sm: 0 1px 2px rgba(25, 24, 20, 0.06);
+      --shadow-md: 0 8px 24px rgba(25, 24, 20, 0.1);
+      --font-body: 'Satoshi', 'Inter', sans-serif;
+      --transition: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="dark"] {
+      --color-bg: #171614;
+      --color-surface: #1c1b19;
+      --color-surface-2: #201f1d;
+      --color-border: #393836;
+      --color-divider: #262523;
+      --color-text: #cdccca;
+      --color-text-muted: #979692;
+      --color-text-inverse: #171614;
+      --color-primary: #4f98a3;
+      --color-primary-hover: #66aab4;
+      --color-success: #7fbb58;
+      --color-warning: #d29167;
+      --color-error: #d163a7;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.55;
+      color: var(--color-text);
+      background:
+        radial-gradient(circle at top right, rgba(1, 105, 111, 0.08), transparent 26%),
+        var(--color-bg);
+    }
+
+    button, input { font: inherit; }
+
+    .shell {
+      width: min(960px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: var(--space-6) 0 var(--space-10);
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: auto;
+    }
+
+    .skip-link:focus {
+      left: 1rem;
+      top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      border-radius: var(--radius-md);
+      z-index: 100;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .brand svg {
+      width: 32px;
+      height: 32px;
+      color: var(--color-primary);
+    }
+
+    .theme-toggle {
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full, 9999px);
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: background var(--transition), border-color var(--transition), transform var(--transition);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .theme-toggle:hover { background: var(--color-surface-2); }
+    .theme-toggle:active { transform: translateY(1px); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: var(--space-6);
+      align-items: start;
+    }
+
+    .panel {
+      background: color-mix(in srgb, var(--color-surface) 92%, white 8%);
+      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+    }
+
+    .intro {
+      padding: clamp(1.5rem, 2vw, 2rem);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.35rem 0.7rem;
+      border-radius: 9999px;
+      background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+      color: var(--color-primary);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: var(--space-4);
+    }
+
+    h1 {
+      margin: 0 0 var(--space-4);
+      font-size: var(--text-xl);
+      line-height: 1.08;
+    }
+
+    .intro p {
+      margin: 0 0 var(--space-5);
+      max-width: 58ch;
+      color: var(--color-text-muted);
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+      margin-top: var(--space-6);
+    }
+
+    .mini-stat {
+      padding: var(--space-4);
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-2);
+    }
+
+    .mini-stat span {
+      display: block;
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mini-stat strong {
+      font-size: var(--text-lg);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .calculator {
+      padding: clamp(1.25rem, 2vw, 1.75rem);
+    }
+
+    .calculator h2,
+    .results h2,
+    .formula h2 {
+      margin: 0 0 var(--space-5);
+      font-size: var(--text-lg);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .field {
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .field label {
+      font-size: var(--text-sm);
+      font-weight: 600;
+    }
+
+    .field small {
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.85rem 0.95rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .field input:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+    }
+
+    .actions {
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-top: var(--space-5);
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition);
+      cursor: pointer;
+    }
+
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+    }
+    .btn-primary:hover { background: var(--color-primary-hover); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--color-text);
+      border-color: var(--color-border);
+    }
+    .btn-secondary:hover { background: var(--color-surface-2); }
+
+    .lower {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr;
+      gap: var(--space-6);
+      margin-top: var(--space-6);
+    }
+
+    .results,
+    .formula {
+      padding: clamp(1.25rem, 2vw, 1.75rem);
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .result-card {
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-2);
+      border: 1px solid color-mix(in srgb, var(--color-text) 10%, transparent);
+    }
+
+    .result-card span {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+    }
+
+    .result-card strong {
+      font-size: var(--text-lg);
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    .status-bar {
+      margin-top: var(--space-5);
+      padding: var(--space-4);
+      border-radius: var(--radius-lg);
+      background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface));
+      color: var(--color-text);
+      border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+      font-size: var(--text-sm);
+    }
+
+    .formula ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      color: var(--color-text-muted);
+    }
+
+    .formula li + li { margin-top: var(--space-3); }
+
+    .note {
+      margin-top: var(--space-5);
+      padding-top: var(--space-4);
+      border-top: 1px solid var(--color-divider);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+
+    @media (max-width: 820px) {
+      .hero,
+      .lower,
+      .grid,
+      .result-grid,
+      .mini-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .shell { width: min(100% - 1rem, 960px); }
+      .topbar { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand" aria-label="Risk Reward Toolkit">
+        <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+          <rect x="5" y="7" width="14" height="34" rx="4" fill="currentColor" opacity="0.18"></rect>
+          <rect x="17" y="15" width="14" height="26" rx="4" fill="currentColor" opacity="0.42"></rect>
+          <rect x="29" y="3" width="14" height="38" rx="4" fill="currentColor"></rect>
+        </svg>
+        <span>Risk / Reward</span>
+      </div>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch to dark mode">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </header>
+
+    <main id="main">
+      <section class="hero" aria-labelledby="page-title">
+        <article class="panel intro">
+          <div class="eyebrow">Trading template</div>
+          <h1 id="page-title">Simple risk/reward calculator for trade planning</h1>
+          <p>Enter your account size, entry, stop, and target to estimate position size, dollars at risk, and the reward-to-risk ratio before placing a trade.</p>
+          <div class="mini-stats" aria-label="Quick snapshot">
+            <div class="mini-stat">
+              <span>Best for</span>
+              <strong>Stocks</strong>
+            </div>
+            <div class="mini-stat">
+              <span>Mode</span>
+              <strong>Template</strong>
+            </div>
+            <div class="mini-stat">
+              <span>Output</span>
+              <strong>Instant</strong>
+            </div>
+          </div>
+        </article>
+
+        <section class="panel calculator" aria-labelledby="calc-heading">
+          <h2 id="calc-heading">Trade inputs</h2>
+          <form id="calculator-form">
+            <div class="grid">
+              <div class="field">
+                <label for="accountSize">Account size</label>
+                <input id="accountSize" name="accountSize" type="number" step="0.01" value="10000" />
+                <small>Total capital in the account.</small>
+              </div>
+              <div class="field">
+                <label for="riskPercent">Risk per trade (%)</label>
+                <input id="riskPercent" name="riskPercent" type="number" step="0.01" value="1" />
+                <small>Typical range is 0.5% to 2%.</small>
+              </div>
+              <div class="field">
+                <label for="entryPrice">Entry price</label>
+                <input id="entryPrice" name="entryPrice" type="number" step="0.01" value="50" />
+                <small>Your planned entry.</small>
+              </div>
+              <div class="field">
+                <label for="stopPrice">Stop price</label>
+                <input id="stopPrice" name="stopPrice" type="number" step="0.01" value="48" />
+                <small>Exit if the trade fails.</small>
+              </div>
+              <div class="field">
+                <label for="targetPrice">Target price</label>
+                <input id="targetPrice" name="targetPrice" type="number" step="0.01" value="56" />
+                <small>Your planned profit target.</small>
+              </div>
+              <div class="field">
+                <label for="feeEstimate">Fees / slippage</label>
+                <input id="feeEstimate" name="feeEstimate" type="number" step="0.01" value="0" />
+                <small>Optional total cost estimate.</small>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" type="submit">Calculate</button>
+              <button class="btn btn-secondary" type="reset">Reset</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="lower" aria-label="Results and formula notes">
+        <section class="panel results" aria-labelledby="results-heading">
+          <h2 id="results-heading">Results</h2>
+          <div class="result-grid">
+            <div class="result-card">
+              <span>Dollar risk</span>
+              <strong id="dollarRisk">$100.00</strong>
+            </div>
+            <div class="result-card">
+              <span>Risk per share</span>
+              <strong id="riskPerShare">$2.00</strong>
+            </div>
+            <div class="result-card">
+              <span>Position size</span>
+              <strong id="positionSize">50 shares</strong>
+            </div>
+            <div class="result-card">
+              <span>Reward / risk</span>
+              <strong id="rrRatio">3.00 : 1</strong>
+            </div>
+          </div>
+          <div class="status-bar" id="statusMessage">This sample setup risks $100 to target about $300 before costs.</div>
+        </section>
+
+        <aside class="panel formula" aria-labelledby="formula-heading">
+          <h2 id="formula-heading">Formula notes</h2>
+          <ul>
+            <li>Dollar risk = account size × risk percent.</li>
+            <li>Risk per share = entry price - stop price.</li>
+            <li>Position size = dollar risk ÷ risk per share.</li>
+            <li>Reward/risk = (target - entry) ÷ (entry - stop).</li>
+          </ul>
+          <p class="note">You can expand this template later with long/short toggle, ATR-based stop distance, partial exits, and percent gain estimates.</p>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const html = document.documentElement;
+    const toggle = document.querySelector('[data-theme-toggle]');
+    let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    html.setAttribute('data-theme', theme);
+
+    const setIcon = () => {
+      toggle.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`);
+      toggle.innerHTML = theme === 'dark'
+        ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>'
+        : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+    };
+    setIcon();
+    toggle.addEventListener('click', () => {
+      theme = theme === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', theme);
+      setIcon();
+    });
+
+    const form = document.getElementById('calculator-form');
+    const output = {
+      dollarRisk: document.getElementById('dollarRisk'),
+      riskPerShare: document.getElementById('riskPerShare'),
+      positionSize: document.getElementById('positionSize'),
+      rrRatio: document.getElementById('rrRatio'),
+      statusMessage: document.getElementById('statusMessage')
+    };
+
+    const money = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    const number = (value, digits = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+
+    function calculate() {
+      const accountSize = parseFloat(form.accountSize.value) || 0;
+      const riskPercent = parseFloat(form.riskPercent.value) || 0;
+      const entry = parseFloat(form.entryPrice.value) || 0;
+      const stop = parseFloat(form.stopPrice.value) || 0;
+      const target = parseFloat(form.targetPrice.value) || 0;
+      const feeEstimate = parseFloat(form.feeEstimate.value) || 0;
+
+      const dollarRisk = accountSize * (riskPercent / 100);
+      const riskPerShare = entry - stop;
+      const rewardPerShare = target - entry;
+
+      if (riskPerShare <= 0 || rewardPerShare <= 0 || dollarRisk <= 0) {
+        output.dollarRisk.textContent = money(0);
+        output.riskPerShare.textContent = money(0);
+        output.positionSize.textContent = '0 shares';
+        output.rrRatio.textContent = '0.00 : 1';
+        output.statusMessage.textContent = 'Use an entry above the stop and a target above the entry to calculate a valid long setup.';
+        return;
+      }
+
+      const shares = Math.floor(dollarRisk / riskPerShare);
+      const grossReward = shares * rewardPerShare;
+      const netReward = Math.max(grossReward - feeEstimate, 0);
+      const ratio = rewardPerShare / riskPerShare;
+
+      output.dollarRisk.textContent = money(dollarRisk);
+      output.riskPerShare.textContent = money(riskPerShare);
+      output.positionSize.textContent = `${new Intl.NumberFormat('en-US').format(shares)} shares`;
+      output.rrRatio.textContent = `${number(ratio)} : 1`;
+      output.statusMessage.textContent = `This setup risks ${money(dollarRisk)} to target about ${money(netReward)} after estimated costs.`;
+    }
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      calculate();
+    });
+
+    form.addEventListener('reset', () => {
+      requestAnimationFrame(calculate);
+    });
+
+    calculate();
+  </script>
+</body>
+</html>
