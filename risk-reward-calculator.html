@@ -261,6 +261,58 @@
       box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
     }
 
+    .field select {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.85rem 0.95rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface-2);
+      color: var(--color-text);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+    }
+
+    .field select:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+    }
+
+    .advanced {
+      margin-top: var(--space-5);
+      padding: var(--space-4);
+      border: 1px solid var(--color-divider);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-2);
+    }
+
+    .advanced summary {
+      cursor: pointer;
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text);
+      list-style: none;
+    }
+
+    .advanced summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .advanced summary::after {
+      content: 'Show';
+      float: right;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+
+    .advanced[open] summary::after {
+      content: 'Hide';
+    }
+
+    .advanced-body {
+      margin-top: var(--space-4);
+    }
+
     .actions {
       display: flex;
       gap: var(--space-3);
@@ -342,6 +394,16 @@
       font-size: var(--text-sm);
     }
 
+    .status-bar.is-warning {
+      background: color-mix(in srgb, var(--color-warning) 12%, var(--color-surface));
+      border-color: color-mix(in srgb, var(--color-warning) 26%, transparent);
+    }
+
+    .status-bar.is-error {
+      background: color-mix(in srgb, var(--color-error) 12%, var(--color-surface));
+      border-color: color-mix(in srgb, var(--color-error) 28%, transparent);
+    }
+
     .formula ul {
       margin: 0;
       padding-left: 1.1rem;
@@ -418,14 +480,12 @@
           <form id="calculator-form">
             <div class="grid">
               <div class="field">
-                <label for="accountSize">Account size</label>
-                <input id="accountSize" name="accountSize" type="number" step="0.01" value="10000" />
-                <small>Total capital in the account.</small>
-              </div>
-              <div class="field">
-                <label for="riskPercent">Risk per trade (%)</label>
-                <input id="riskPercent" name="riskPercent" type="number" step="0.01" value="1" />
-                <small>Typical range is 0.5% to 2%.</small>
+                <label for="allocationMode">Allocation mode</label>
+                <select id="allocationMode" name="allocationMode">
+                  <option value="perTrade" selected>Per-trade risk mode</option>
+                  <option value="portfolioSplit">Portfolio split mode</option>
+                </select>
+                <small>Choose explicit sizing logic for this setup.</small>
               </div>
               <div class="field">
                 <label for="entryPrice">Entry price</label>
@@ -442,12 +502,78 @@
                 <input id="targetPrice" name="targetPrice" type="number" step="0.01" value="56" />
                 <small>Your planned profit target.</small>
               </div>
-              <div class="field">
-                <label for="feeEstimate">Fees / slippage</label>
-                <input id="feeEstimate" name="feeEstimate" type="number" step="0.01" value="0" />
-                <small>Optional total cost estimate.</small>
-              </div>
             </div>
+
+            <details class="advanced" id="advanced-panel">
+              <summary>Advanced options</summary>
+              <div class="advanced-body">
+                <div class="grid">
+                  <div class="field">
+                    <label for="accountSize">Account size</label>
+                    <input id="accountSize" name="accountSize" type="number" step="0.01" value="10000" />
+                    <small>Primary account capital.</small>
+                  </div>
+                  <div class="field">
+                    <label for="additionalAccountSize">Additional account balance (optional)</label>
+                    <input id="additionalAccountSize" name="additionalAccountSize" type="number" step="0.01" value="0" />
+                    <small>Set to 0 if you use only one account.</small>
+                  </div>
+                  <div class="field">
+                    <label for="riskPercent">Risk per trade (%)</label>
+                    <input id="riskPercent" name="riskPercent" type="number" step="0.01" value="1" />
+                    <small>Typical range is 0.5% to 2%.</small>
+                  </div>
+                  <div class="field">
+                    <label for="portfolioRiskPercent">Portfolio risk (%) (optional)</label>
+                    <input id="portfolioRiskPercent" name="portfolioRiskPercent" type="number" step="0.01" value="0" />
+                    <small>If greater than 0, this total risk is split across planned trades.</small>
+                  </div>
+                  <div class="field">
+                    <label for="plannedTrades">Planned trades</label>
+                    <input id="plannedTrades" name="plannedTrades" type="number" step="1" value="1" min="1" />
+                    <small>Used only when portfolio risk (%) is enabled.</small>
+                  </div>
+                  <div class="field">
+                    <label for="buyingPower">Available buying power</label>
+                    <input id="buyingPower" name="buyingPower" type="number" step="0.01" value="10000" />
+                    <small>Cash or margin available for this position.</small>
+                  </div>
+                  <div class="field">
+                    <label for="minRr">Minimum reward/risk</label>
+                    <input id="minRr" name="minRr" type="number" step="0.01" value="2" />
+                    <small>Common minimum is 2.00 : 1.</small>
+                  </div>
+                  <div class="field">
+                    <label for="feeEstimate">Fees / slippage</label>
+                    <input id="feeEstimate" name="feeEstimate" type="number" step="0.01" value="0" />
+                    <small>Optional total cost estimate.</small>
+                  </div>
+                  <div class="field">
+                    <label for="slippagePerShare">Slippage per share</label>
+                    <input id="slippagePerShare" name="slippagePerShare" type="number" step="0.01" value="0" />
+                    <small>Use for volatile or illiquid setups.</small>
+                  </div>
+                  <div class="field">
+                    <label for="openRiskPercent">Current open-trade risk (%)</label>
+                    <input id="openRiskPercent" name="openRiskPercent" type="number" step="0.01" value="0" />
+                    <small>Risk already committed in other open trades.</small>
+                  </div>
+                  <div class="field">
+                    <label for="portfolioRiskLimit">Portfolio risk limit (%)</label>
+                    <input id="portfolioRiskLimit" name="portfolioRiskLimit" type="number" step="0.01" value="5" />
+                    <small>Maximum total open risk across all trades.</small>
+                  </div>
+                  <div class="field">
+                    <label for="fractionalSupport">Broker fractional shares</label>
+                    <select id="fractionalSupport" name="fractionalSupport">
+                      <option value="no" selected>No</option>
+                      <option value="yes">Yes</option>
+                    </select>
+                    <small>When disabled, share size is always whole shares.</small>
+                  </div>
+                </div>
+              </div>
+            </details>
             <div class="actions">
               <button class="btn btn-primary" type="submit">Calculate</button>
               <button class="btn btn-secondary" type="reset">Reset</button>
@@ -483,10 +609,11 @@
         <aside class="panel formula" aria-labelledby="formula-heading">
           <h2 id="formula-heading">Formula notes</h2>
           <ul>
-            <li>Dollar risk = account size × risk percent.</li>
-            <li>Risk per share = entry price - stop price.</li>
-            <li>Position size = dollar risk ÷ risk per share.</li>
-            <li>Reward/risk = (target - entry) ÷ (entry - stop).</li>
+            <li>Per-trade mode: dollar risk = total account size × risk per trade (%).</li>
+            <li>Portfolio split mode: trade budget = (total account size × portfolio risk %) ÷ planned trades.</li>
+            <li>Risk per share = entry price - stop price + slippage per share.</li>
+            <li>Position size is rounded down from usable risk dollars ÷ risk per share.</li>
+            <li>Reward/risk uses slippage-adjusted reward and risk.</li>
           </ul>
           <p class="note">You can expand this template later with long/short toggle, ATR-based stop distance, partial exits, and percent gain estimates.</p>
         </aside>
@@ -524,38 +651,145 @@
 
     const money = (value) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     const number = (value, digits = 2) => new Intl.NumberFormat('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+    const floorTo = (value, precision = 0) => {
+      const scale = 10 ** precision;
+      return Math.floor(value * scale) / scale;
+    };
+
+    function setStatus(kind, message) {
+      output.statusMessage.classList.remove('is-warning', 'is-error');
+      if (kind === 'warning') output.statusMessage.classList.add('is-warning');
+      if (kind === 'error') output.statusMessage.classList.add('is-error');
+      output.statusMessage.textContent = message;
+    }
+
+    function clearOutputs() {
+      output.dollarRisk.textContent = money(0);
+      output.riskPerShare.textContent = money(0);
+      output.positionSize.textContent = '0 shares';
+      output.rrRatio.textContent = '0.00 : 1';
+    }
+
+    function syncAllocationModeUI() {
+      const mode = form.allocationMode.value;
+      const isPerTrade = mode === 'perTrade';
+      const advancedPanel = document.getElementById('advanced-panel');
+
+      form.riskPercent.disabled = !isPerTrade;
+      form.portfolioRiskPercent.disabled = isPerTrade;
+      form.plannedTrades.disabled = isPerTrade;
+      advancedPanel.open = !isPerTrade;
+    }
 
     function calculate() {
+      const allocationMode = form.allocationMode.value;
       const accountSize = parseFloat(form.accountSize.value) || 0;
+      const additionalAccountSize = Math.max(parseFloat(form.additionalAccountSize.value) || 0, 0);
       const riskPercent = parseFloat(form.riskPercent.value) || 0;
+      const portfolioRiskPercent = Math.max(parseFloat(form.portfolioRiskPercent.value) || 0, 0);
+      const plannedTrades = Math.max(parseInt(form.plannedTrades.value, 10) || 1, 1);
+      const buyingPower = parseFloat(form.buyingPower.value) || 0;
+      const minRr = parseFloat(form.minRr.value) || 0;
       const entry = parseFloat(form.entryPrice.value) || 0;
       const stop = parseFloat(form.stopPrice.value) || 0;
       const target = parseFloat(form.targetPrice.value) || 0;
-      const feeEstimate = parseFloat(form.feeEstimate.value) || 0;
+      const feeEstimate = Math.max(parseFloat(form.feeEstimate.value) || 0, 0);
+      const slippagePerShare = Math.max(parseFloat(form.slippagePerShare.value) || 0, 0);
+      const openRiskPercent = Math.max(parseFloat(form.openRiskPercent.value) || 0, 0);
+      const portfolioRiskLimit = parseFloat(form.portfolioRiskLimit.value) || 0;
+      const allowFractional = form.fractionalSupport.value === 'yes';
 
-      const dollarRisk = accountSize * (riskPercent / 100);
-      const riskPerShare = entry - stop;
-      const rewardPerShare = target - entry;
+      const errors = [];
+      const warnings = [];
+      const totalAccountSize = accountSize + additionalAccountSize;
 
-      if (riskPerShare <= 0 || rewardPerShare <= 0 || dollarRisk <= 0) {
-        output.dollarRisk.textContent = money(0);
-        output.riskPerShare.textContent = money(0);
-        output.positionSize.textContent = '0 shares';
-        output.rrRatio.textContent = '0.00 : 1';
-        output.statusMessage.textContent = 'Use an entry above the stop and a target above the entry to calculate a valid long setup.';
+      if (totalAccountSize <= 0) errors.push('Total account size must be greater than zero.');
+      if (allocationMode === 'perTrade' && riskPercent <= 0) {
+        errors.push('Risk per trade (%) must be greater than zero in per-trade mode.');
+      }
+      if (allocationMode === 'portfolioSplit' && portfolioRiskPercent <= 0) {
+        errors.push('Portfolio risk (%) must be greater than zero in portfolio split mode.');
+      }
+      if (allocationMode === 'portfolioSplit' && plannedTrades < 1) {
+        errors.push('Planned trades must be at least 1 in portfolio split mode.');
+      }
+      if (buyingPower <= 0) errors.push('Available buying power must be greater than zero.');
+      if (entry <= 0) errors.push('Entry price must be greater than zero.');
+      if (stop >= entry) errors.push('Stop must be below the entry for a long trade.');
+      if (target <= entry) errors.push('Target must be above the entry for a long trade.');
+
+      const baseRiskPerShare = entry - stop;
+      if (baseRiskPerShare <= 0) errors.push('Risk per share must be greater than zero.');
+
+      const riskPerShare = baseRiskPerShare + slippagePerShare;
+      const rewardPerShare = Math.max(target - entry - slippagePerShare, 0);
+      const maxRiskBudget = allocationMode === 'portfolioSplit'
+        ? (totalAccountSize * (portfolioRiskPercent / 100)) / plannedTrades
+        : totalAccountSize * (riskPercent / 100);
+      const usableRiskBudget = maxRiskBudget - feeEstimate;
+
+      if (allocationMode === 'portfolioSplit' && plannedTrades > 1) {
+        warnings.push(`Portfolio max loss is ${money(totalAccountSize * (portfolioRiskPercent / 100))}, split into ${plannedTrades} trade budgets of about ${money(maxRiskBudget)} each.`);
+      }
+
+      if (riskPerShare <= 0) errors.push('Risk per share after slippage must be greater than zero.');
+      if (usableRiskBudget <= 0) {
+        errors.push('Fees and slippage consume all risk budget. Lower costs or increase risk budget.');
+      }
+
+      if (errors.length > 0) {
+        clearOutputs();
+        setStatus('error', errors.join(' '));
         return;
       }
 
-      const shares = Math.floor(dollarRisk / riskPerShare);
+      const rawShares = usableRiskBudget / riskPerShare;
+      const shares = allowFractional ? floorTo(rawShares, 3) : Math.floor(rawShares);
+
+      if (shares <= 0) {
+        clearOutputs();
+        setStatus('error', 'Calculated share size is zero. Increase risk budget or tighten your stop distance.');
+        return;
+      }
+
+      if (!allowFractional && !Number.isInteger(rawShares)) {
+        warnings.push('Broker does not support fractional shares, so position size was rounded down.');
+      }
+
+      const positionCost = (shares * entry) + feeEstimate;
+      if (positionCost > buyingPower) {
+        clearOutputs();
+        setStatus('error', `Position requires ${money(positionCost)} but available buying power is ${money(buyingPower)}.`);
+        return;
+      }
+
+      const dollarRiskUsed = (shares * riskPerShare) + feeEstimate;
       const grossReward = shares * rewardPerShare;
       const netReward = Math.max(grossReward - feeEstimate, 0);
       const ratio = rewardPerShare / riskPerShare;
+      const projectedTotalRiskPercent = openRiskPercent + ((dollarRiskUsed / totalAccountSize) * 100);
 
-      output.dollarRisk.textContent = money(dollarRisk);
+      if (ratio < minRr) {
+        warnings.push(`Reward/risk is ${number(ratio)} : 1, below your minimum of ${number(minRr)} : 1.`);
+      }
+      if (portfolioRiskLimit > 0 && projectedTotalRiskPercent > portfolioRiskLimit) {
+        warnings.push(`Combined open-trade risk is ${number(projectedTotalRiskPercent)}%, above your portfolio limit of ${number(portfolioRiskLimit)}%.`);
+      }
+      if (slippagePerShare > 0 || feeEstimate > 0) {
+        warnings.push('Costs include fees and slippage; confirm assumptions for volatile or illiquid stocks.');
+      }
+
+      output.dollarRisk.textContent = money(maxRiskBudget);
       output.riskPerShare.textContent = money(riskPerShare);
-      output.positionSize.textContent = `${new Intl.NumberFormat('en-US').format(shares)} shares`;
+      output.positionSize.textContent = `${new Intl.NumberFormat('en-US', { maximumFractionDigits: allowFractional ? 3 : 0 }).format(shares)} shares`;
       output.rrRatio.textContent = `${number(ratio)} : 1`;
-      output.statusMessage.textContent = `This setup risks ${money(dollarRisk)} to target about ${money(netReward)} after estimated costs.`;
+
+      if (warnings.length > 0) {
+        setStatus('warning', `${warnings.join(' ')} Net target after costs: ${money(netReward)}.`);
+      } else {
+        const modeLabel = allocationMode === 'portfolioSplit' ? 'portfolio split mode' : 'per-trade mode';
+        setStatus('info', `Using ${modeLabel}, this setup risks ${money(dollarRiskUsed)} to target about ${money(netReward)} after estimated costs.`);
+      }
     }
 
     form.addEventListener('submit', (event) => {
@@ -563,10 +797,22 @@
       calculate();
     });
 
-    form.addEventListener('reset', () => {
-      requestAnimationFrame(calculate);
+    form.addEventListener('input', () => {
+      syncAllocationModeUI();
     });
 
+    form.allocationMode.addEventListener('change', () => {
+      syncAllocationModeUI();
+    });
+
+    form.addEventListener('reset', () => {
+      requestAnimationFrame(() => {
+        syncAllocationModeUI();
+        calculate();
+      });
+    });
+
+    syncAllocationModeUI();
     calculate();
   </script>
 </body>
